@@ -1,0 +1,223 @@
+openapi: 3.0.2
+
+info:
+  title: Authentification microservice API
+  description: API for the authentification microservice for the musicserver application
+  version: 1.0.0
+
+
+paths:
+  /v1/users:
+    get:
+      summary: Get registered users
+      description: Request all registered users from the database with some query params to parameterize the result
+      tags:
+        - users
+      parameters:
+        - in: query
+          name: skipCount
+          schema:
+            type: integer
+            default: 0
+          description: The number of users, that should be skipped
+          required: false
+
+        - in: query
+          name: maxItems
+          schema:
+            type: integer
+            default: 25
+          description: Number of users, that should maximum be returned
+          required: false
+
+        - in: query
+          name: include
+          schema:
+            type: string
+            enum:
+              - userdata
+              - statistics
+          description: Optional information, that can be included in the return data
+          required: false
+
+        - in: query
+          name: locked
+          schema:
+            type: boolean
+          description: Filter result set by information, if user is locked
+          required: false
+
+        - in: query
+          name: username
+          schema:
+            type: string
+          description: Filter result set by username (use * as wildcard character)
+          example: '*user*name*'
+          required: false
+
+        - in: query
+          name: createdAfter
+          schema:
+            type: string
+          description: Get all users, that have been created at or after the timestamp
+          example: '2019-06-23T16:50:44.672Z'
+          required: false
+
+        - in: query
+          name: createdBefore
+          schema:
+            type: string
+          description: Get all users, that have been created before or at the timestamp
+          example: '2019-06-23T16:50:44.672Z'
+          required: false
+
+        - in: query
+          name: updatedAfter,
+          schema:
+            type: string
+          description: Get all users, that have been updated at or after the timestamp
+          example: '2019-06-23T16:50:44.672Z'
+          required: false
+
+        - in: query
+          name: updatedBefore
+          schema:
+            type: string
+          description: Get all users, that have been updated before or at the timestamp
+          example: '2019-06-23T16:50:44.672Z'
+          required: false
+
+      responses:
+        '200':
+          description: A JSON array of users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUsersDataResponse'
+
+        '500':
+          description: Error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUsersErrorResponse'
+
+
+
+components:
+  schemas:
+
+    Error:
+      type: object
+      properties:
+        type:
+          type: string
+        message:
+          type: string
+
+    UnsupportedError:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ["UnsupportedError"]
+        message:
+          type: string
+
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: false
+        username:
+          type: string
+          nullable: false
+        locked:
+          type: boolean
+          nullable: false
+          default: false
+        createdAt:
+          type: string
+          nullable: false
+        updatedAt:
+          type: string
+          nullable: false
+        statistics:
+          $ref: '#/components/schemas/UserStatistics'
+        userData:
+          $ref: '#/components/schemas/UserData'
+    
+    UserStatistics:
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: false
+        countSignin:
+          type: integer
+          nullable: false
+        countSignout:
+          type: integer
+          nullable: false
+        lastLogin:
+          type: string
+          nullable: true
+        lastLogout:
+          type: string
+          nullable: true
+
+    UserData:
+      type: object
+      properties:
+        id:
+          type: string
+          nullable: false
+        profilePicture:
+          type: string
+          nullable: true
+        gender:
+          type: string
+          enum:
+            - MALE
+            - FEMALE
+          nullable: true
+        firstname:
+          type: string
+          nullable: true
+        lastname:
+          type: string
+          nullable: true
+        mail:
+          type: string
+          nullable: true
+
+
+
+    GetUsersErrorResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+          nullable: true
+        errors:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/UnsupportedError'
+        
+    GetUsersDataResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+
