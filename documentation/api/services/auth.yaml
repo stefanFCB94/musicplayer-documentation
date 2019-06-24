@@ -13,6 +13,7 @@ paths:
       description: Request all registered users from the database with some query params to parameterize the result
       tags:
         - users
+
       parameters:
         - in: query
           name: skipCount
@@ -103,6 +104,55 @@ paths:
                 $ref: '#/components/schemas/GetUsersErrorResponse'
 
 
+  /v1/users/{id}:
+    get:
+      summary: Get registered user
+      description: Get the user information to the specific id
+      tags:
+        - users
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: The user id, to which the user information should be requested
+
+        - in: query
+          name: include
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - userdata
+                - statistics
+          description: Include optional data for the user
+
+      responses:
+        '200':
+          description: A user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserDataResponse'
+            
+        '404':
+          description: User cannot be found in database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserError404Response'
+
+        '500':
+          desription: Unsupported error requesting the user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetUserError500Response'
+
 
 components:
   schemas:
@@ -123,6 +173,15 @@ components:
           enum: ["UnsupportedError"]
         message:
           type: string
+
+    UserNotFoundError:
+      type: object
+      properties:
+        type: string
+        enum: ["UserNotFoundError"]
+      message:
+        type: string
+
 
 
     User:
@@ -221,3 +280,35 @@ components:
           items:
             $ref: '#/components/schemas/Error'
 
+
+
+    GetUserDataResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Error'
+
+    GetUserError404Response:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+        errors:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/UserNotFoundError'
+    
+    GetUserError500Response:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/User'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/UnsupportedError'
